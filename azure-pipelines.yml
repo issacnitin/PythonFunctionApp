@@ -8,7 +8,7 @@ trigger:
 
 variables:
   # Azure Resource Manager connection
-  azureSubscription: '64159048-6de1-4e78-8a66-555081ae5944'
+  azureSubscription: '5e716136-4900-4186-9981-6229e004233c'
 
   # Web app name
   webAppName: 'issacnitinpythonfunctionapp'
