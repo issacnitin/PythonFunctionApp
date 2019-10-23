@@ -8,10 +8,10 @@ trigger:
 
 variables:
   # Azure Resource Manager connection
-  azureSubscription: 'eeb3e649-4fe9-48fa-ae5d-e0370f0c86e0'
+  azureSubscription: 'f920ff60-ccdf-4696-80ac-2d3982df5d68'
 
   # Web app name
-  functionAppName: 'issacnitinpythonfunctionapp123'
+  functionAppName: 'issacnitinpythonlinuxfunctionapp'
 
   # Agent VM image name
   vmImageName: 'ubuntu-latest'
@@ -81,3 +81,4 @@ stages:
               appType: functionAppLinux
               appName: $(functionAppName)
               package: '$(Pipeline.Workspace)/drop/$(Build.BuildId).zip'
+              runtimeStack: 'DOCKER|microsoft/azure-functions-python3.6:2.0'
