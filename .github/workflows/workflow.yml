@@ -1,14 +1,14 @@
-# Node.js Function App to Linux on Azure
-# Build a Node.js function app and deploy it to Azure as a Linux function app.
-# Add steps that build code, save build artifacts, deploy, and more:
-# https://docs.microsoft.com/azure/devops/pipelines/languages/javascript
+# Python Function App to Linux on Azure
+# Build a Python function app and deploy it to Azure as a Linux function app.
+# Add steps that analyze code, save build artifacts, deploy, and more:
+# https://docs.microsoft.com/azure/devops/pipelines/languages/python
 
 on:
   push:
     branches:
       - master
 
-name: Build and deploy Node Function app
+name: Build and deploy Python Function app
 
 jobs:
   build-and-deploy:
@@ -21,21 +21,20 @@ jobs:
       with:
         creds: ${{ secrets.AZURE_CREDENTIALS }}
 
-    - name: 'Run npm'
+    - name: 'Run pip'
       shell: bash
       run: |
         # If your function app project is not located in your repository's root
         # Please change your directory for pip in pushd
-        npm install
-        npm run build --if-present
-        npm run test --if-present
+        python -m pip install --upgrade pip
+        pip install -r requirements.txt --target=".python_packages/lib/python3.6/site-packages"
 
     # deploy web app using publish profile credentials
     - name: 'Run Azure Functions Action'
       uses: Azure/functions-action@v1
       id: fa
       with:
-        app-name: issacnitinnodefunctionlinux2
+        app-name: issacnitinsimplepythonfuncapp
 
     # Azure logout
     - name: logout
