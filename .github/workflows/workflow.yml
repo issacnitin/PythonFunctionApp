@@ -17,6 +17,11 @@ jobs:
     # checkout the repo
     - uses: actions/checkout@master
 
+    - name: Setup python
+        uses: actions/setup-python@v1
+        with:
+          python-version: 3.6
+
     - uses: azure/login@v1
       with:
         creds: ${{ secrets.AZURE_CREDENTIALS }}
