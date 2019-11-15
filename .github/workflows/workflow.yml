@@ -27,7 +27,9 @@ jobs:
         # If your function app project is not located in your repository's root
         # Please change your directory for pip in pushd
         python -m pip install --upgrade pip
-        pip install -r requirements.txt --target=".python_packages/lib/python3.6/site-packages"
+        python -m venv --copies worker_venv
+        source worker_venv/bin/activate
+        pip install -r requirements.txt
 
     # deploy web app using publish profile credentials
     - name: 'Run Azure Functions Action'
