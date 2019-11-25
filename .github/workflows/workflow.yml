@@ -1,93 +1,47 @@
 # Python Function App to Linux on Azure
 # Build a Python function app and deploy it to Azure as a Linux function app.
 # Add steps that analyze code, save build artifacts, deploy, and more:
-# https://docs.microsoft.com/azure/devops/pipelines/languages/python
 
-trigger:
-- master
+on:
+  push:
+    branches:
+      - master
 
-variables:
-  # Azure Resource Manager connection
-  azureSubscription: 'AZURE_CREDENTIALS'
+name: Build and deploy Python Function app
 
-  # Web app name
-  functionAppName: 'issacnitinsimplepythonfuncapp'
-
-  # Agent VM image name
-  vmImageName: 'ubuntu-latest'
-
-  # Working Directory
-  workingDirectory: 'functionApp'
-
-  # Python Version
-  pythonVersion: 3.6 # Functions V2 supports Python 3.6 as of today
-
-stages:
-- stage: Build
-  displayName: Build stage
-
-  jobs:
-  - job: Build
-    displayName: Build
-    pool:
-      vmImage: $(vmImageName)
-
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
     steps:
-    - bash: |
-        if [ -f extensions.csproj ]
-        then
-            dotnet build extensions.csproj --runtime ubuntu.16.04-x64 --output ./bin
-        fi
-      displayName: 'Build extensions'
-      workingDirectory: $(workingDirectory)
+    # checkout the repo
+    - uses: actions/checkout@master
 
-    - task: UsePythonVersion@0
-      displayName: 'Use Python 3.6'
-      inputs:
-        versionSpec: $(pythonVersion)
+    - name: Setup python
+      uses: actions/setup-python@v1
+      with:
+        python-version: 3.6
 
-    - bash: |
-        python -m venv worker_venv
+    - uses: azure/login@v1
+      with:
+        creds: ${{ secrets.AZURE_CREDENTIALS }}
+
+    - name: 'Run pip'
+      shell: bash
+      run: |
+        python -m pip install --upgrade pip
+        python -m venv --copies worker_venv
         source worker_venv/bin/activate
         pip install -r requirements.txt
-      displayName: 'Install application dependencies'
-      workingDirectory: $(workingDirectory)
 
-    - task: ArchiveFiles@2
-      displayName: 'Archive files'
-      inputs:
-        rootFolderOrFile: '$(workingDirectory)'
-        includeRootFolder: false
-        archiveType: zip
-        archiveFile: $(Build.ArtifactStagingDirectory)/$(Build.BuildId).zip
-        replaceExistingArchive: true
+    # deploy web app using publish profile credentials
+    - name: 'Run Azure Functions Action'
+      uses: Azure/functions-action@v1
+      id: fa
+      with:
+        app-name: issacnitinsimplepythonfuncapp
+        package: .
 
-    - publish: $(Build.ArtifactStagingDirectory)/$(Build.BuildId).zip
-      artifact: drop
-
-- stage: Deploy
-  displayName: Deploy stage
-  dependsOn: Build
-  condition: succeeded()
-
-  jobs:
-  - deployment: Deploy
-    displayName: Deploy
-    environment: $(functionAppName)
-    pool:
-      vmImage: $(vmImageName)
-
-    strategy:
-      runOnce:
-        deploy:
-
-          steps:
-          - task: AzureFunctionApp@1
-            displayName: 'Azure functions app deploy'
-            inputs:
-              azureSubscription: '$(azureSubscription)'
-              appType: functionAppLinux
-              appName: $(functionAppName)
-              package: '$(Pipeline.Workspace)/drop/$(Build.BuildId).zip'
-              runtimeStack: 'DOCKER|microsoft/azure-functions/python:2.0' 
-              appSettings: '-FUNCTIONS_WORKER_RUNTIME python'
+    # Azure logout
+    - name: logout
+      run: |
+        az logout
